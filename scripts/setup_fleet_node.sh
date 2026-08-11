@@ -15,8 +15,10 @@ if ! adb devices 2>/dev/null | grep -q "device$"; then
     exit 1
 fi
 
-echo "This will configure your Samsung J7 to work as a compute node"
-echo "in your distributed fleet (like pi-01, pi-02, etc.)"
+NODE_NAME="${1:-android-j7}"
+
+echo "This will configure your Samsung J7 ($NODE_NAME) to work as a"
+echo "compute node in your distributed fleet (like pi-01, pi-02, etc.)"
 echo ""
 echo "📋 Installation Steps:"
 echo "  1. Install core packages in Termux"
@@ -149,7 +151,7 @@ echo "📱 STEP 5: Fleet Integration"
 echo "════════════════════════════════════════════════════════════════"
 echo ""
 echo "Node Information:"
-echo "  Hostname: android-j7"
+echo "  Hostname: $NODE_NAME"
 echo "  IP: $DEVICE_IP"
 echo "  SSH Port: 8022"
 echo "  Cores: 8 (octa-core)"
@@ -161,7 +163,7 @@ echo ""
 cat << FLEET_CONFIG
 # In your fleet management config:
 {
-  "node": "android-j7",
+  "node": "$NODE_NAME",
   "host": "$DEVICE_IP",
   "port": 8022,
   "arch": "aarch64",

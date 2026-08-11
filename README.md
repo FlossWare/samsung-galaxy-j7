@@ -62,9 +62,11 @@ This removes 70+ bloatware packages while preserving camera, phone, and core And
 ## Available Scripts
 
 ### Debloating
-- `aggressive_debloat.sh` - Main debloat script (removes 70 packages)
-- `disable_bloatware.sh` - Conservative removal (Verizon only)
-- `restore_all.sh` - Emergency restore
+- `aggressive_debloat.sh` - Main debloat script (disables 70+ packages)
+- `restore_all.sh` - Re-enable all disabled packages
+- `fix_stopped_services.sh` - Fix "has stopped" errors after cleanup
+- `disable_update_packages.sh` - Disable packages prompting for updates
+- `disable_autostart_apps.sh` - Prevent apps from auto-starting at boot
 
 ### Storage Cleanup
 - `weekly_cleanup.sh` - Clear caches, temp files (run weekly)
@@ -76,7 +78,11 @@ This removes 70+ bloatware packages while preserving camera, phone, and core And
 - `check_prerequisites.sh` - Verify ADB and device connection
 - `setup_termux_sdcard.sh` - Configure Termux storage
 - `install_debian_with_ssh.sh` - Install Debian in Termux
+- `install_minimal_apps.sh` - Install core Termux packages
+- `install_desktop_minimal.sh` - Install LXDE desktop + VNC
 - `setup_ssh_autostart.sh` - Auto-start SSH on boot
+- `setup_fleet_node.sh` - Configure phone as fleet worker node
+- `termux_setup.sh` - Full Termux environment setup
 
 ## Emergency Restore
 
@@ -142,6 +148,7 @@ adb shell pm list packages -d
 - Non-destructive: packages are disabled, not deleted
 - Full restore capability included
 - Tested on Samsung Galaxy J7 (Verizon model)
+- Worker daemon has no authentication (home lab only - do not expose to untrusted networks)
 
 ## License
 

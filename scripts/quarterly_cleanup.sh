@@ -91,8 +91,8 @@ echo ""
 echo "🗑️  Phase 3: Deep System Cleanup"
 echo "-----------------------------------"
 
-echo -n "  Log files... "
-adb shell "find /sdcard -name '*.log' -delete 2>/dev/null"
+echo -n "  Log files (preserving fleet logs)... "
+adb shell "find /sdcard -name '*.log' -not -path '*/termux/*' -delete 2>/dev/null"
 echo "✓"
 
 echo -n "  Temp files... "

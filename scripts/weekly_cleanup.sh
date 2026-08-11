@@ -43,8 +43,9 @@ echo ""
 echo "🗑️  Phase 2: Clean Temporary Files"
 echo "-----------------------------------"
 
-echo -n "  Log files... "
-adb shell "find /sdcard -name '*.log' -delete 2>/dev/null"
+echo -n "  Log files (preserving fleet logs)... "
+adb shell "find /sdcard -name '*.log' -not -path '*/termux/*' -delete 2>/dev/null"
+adb shell "find /data/data/com.termux -name '*.log' -not -name 'boot.log' -not -name 'worker-daemon.log' -not -name 'worker-register.log' -delete 2>/dev/null"
 echo "✓"
 
 echo -n "  Temp files... "
@@ -70,7 +71,8 @@ FREE_KB=$(adb shell dumpsys diskstats 2>/dev/null | grep "Data-Free:" | awk '{pr
 if [ -n "$FREE_KB" ]; then
     FREE_MB=$((FREE_KB / 1024))
     FREE_GB=$((FREE_MB / 1024))
-    echo "💾 Free Space: ${FREE_GB}.${FREE_MB:0:1}GB"
+    REMAINDER_MB=$((FREE_MB % 1024 * 10 / 1024))
+    echo "💾 Free Space: ${FREE_GB}.${REMAINDER_MB}GB"
 fi
 
 echo ""
