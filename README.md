@@ -73,6 +73,13 @@ This removes 70+ bloatware packages while preserving camera, phone, and core And
 - `monthly_cleanup.sh` - Deep clean including logs (run monthly)
 - `quarterly_cleanup.sh` - Full cleanup with download review (run quarterly)
 - `clear_all_caches.sh` - Clear all app caches
+- `fast_clean.sh` - One-shot `pm trim-caches` + junk removal; ~3 seconds, replaces cache-cleaner apps (validated 2026-11-20: 576MB freed)
+
+### Shizuku (elevated commands without root)
+- `shizuku_start.sh` - Start the Shizuku server via adb (required after every reboot on Android < 11)
+- `termux/clean-elevated.sh` - On-phone elevated cache clean via Shizuku/rish (deployed to Termux home)
+
+See [SHIZUKU.md](SHIZUKU.md) for the full setup, including rish (run shell-privileged commands from Termux).
 
 ### System Setup
 - `check_prerequisites.sh` - Verify ADB and device connection
@@ -159,7 +166,8 @@ GPL v3.0 - See LICENSE file
 **What Auto-Starts After Boot:**
 - ✅ SSH server (port 8022) - passwordless access from laptop-01
 - ✅ Worker daemon (port 9003) - HTTP API for fleet control
-- ✅ Fleet registration - heartbeat to aio-01:8004
+- ✅ Wake lock (`termux-wake-lock`) - keeps Android from killing Termux processes (added 2026-11-20; root cause of services dying after boot)
+- ⏸️ Fleet registration - heartbeat to aio-01:8004 (disabled 2026-11-20 while aio-01 is unreachable; re-enable by un-commenting the registration block in `~/.termux/boot/start-worker`)
 
 **Worker API:**
 ```bash
@@ -176,6 +184,10 @@ curl -X POST http://192.168.1.248:9003/execute \
 ```bash
 ssh -p 8022 192.168.1.248
 ```
+
+## AI Coding CLI (Crush)
+
+[Crush](https://github.com/charmbracelet/crush) runs natively on Termux (Android arm64). See [loom-ai-android](https://github.com/FlossWare/loom-ai-android#crush-ai-coding-cli) for installation and provider configuration.
 
 ## Architecture
 
@@ -197,8 +209,12 @@ Total boot time: ~90 seconds from power-on to fully operational.
 ## Current Status
 
 **Fleet Workers:**
-- android-j7-01: ✅ Production ready (SSH + daemon auto-start working)
+- android-j7-01: ✅ Production ready (SSH + daemon auto-start working; wake lock fixed 2026-11-20)
 - android-j7-02: Pending setup
 
+**Storage (2026-11-20):** 423MB free → ~2.9GB free (96% → 73% used) via `fast_clean.sh`, uninstalling unused apps/games, and removing Termux's clang/LLVM toolchain (~670MB; reinstall with `pkg install clang` if pip source builds are needed).
+
+**Shizuku:** Installed and working on android-j7-01 — see [SHIZUKU.md](SHIZUKU.md). Elevated commands (`pm trim-caches` etc.) can run from Termux via rish, no laptop required (except to restart the Shizuku server after a reboot).
+
 **Debloating:**
-See `currently_disabled.txt` for list of 70 disabled packages and `docs/DEBLOAT_SUMMARY.txt` for detailed results.
+See `currently_disabled.txt` for list of 70 disabled packages and `docs/DEBLOAT_SUMMARY.txt` for detailed results. Note: as of 2026-11-20 only 5 packages remain disabled on android-j7-01 (state regressed, cause unconfirmed).
