@@ -1,0 +1,84 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Boot script - 30s delay + retry daemon + SSH server
+
+LOGFILE=~/boot.log
+DAEMON_LOG=~/worker-daemon.log
+
+echo "=== Boot script started: $(date) ===" >> $LOGFILE
+
+# Set hostname
+HOSTNAME=android-j7-01
+export HOSTNAME
+
+# Hold wake lock so Android does not kill Termux background processes
+termux-wake-lock >> $LOGFILE 2>&1 && echo "✓ Wake lock acquired" >> $LOGFILE || echo "✗ Wake lock failed" >> $LOGFILE
+echo "HOSTNAME set to: $HOSTNAME" >> $LOGFILE
+
+# Change to home directory
+cd ~ || { echo "ERROR: Failed to cd to home" >> $LOGFILE; exit 1; }
+echo "Working directory: $(pwd)" >> $LOGFILE
+
+# START SSH SERVER FIRST
+echo "Starting SSH server..." >> $LOGFILE
+sshd 2>&1 >> $LOGFILE && echo "✓ SSH server started" >> $LOGFILE || echo "✗ SSH server failed" >> $LOGFILE
+
+# KILL ANY OLD PYTHON PROCESSES
+echo "Killing any old Python processes..." >> $LOGFILE
+pkill -9 python 2>&1 >> $LOGFILE || echo "No old processes to kill" >> $LOGFILE
+sleep 2
+
+# WAIT FOR NETWORK (up to 60 seconds)
+echo "Waiting for network..." >> $LOGFILE
+NETWORK_READY=0
+for i in {1..20}; do
+    if ping -c 1 -W 2 192.168.1.1 > /dev/null 2>&1; then
+        NETWORK_READY=1
+        echo "✓ Network ready after ${i} attempts" >> $LOGFILE
+        break
+    fi
+    sleep 3
+done
+
+if [ $NETWORK_READY -eq 0 ]; then
+    echo "✗ Network not ready after 60 seconds - aborting" >> $LOGFILE
+    exit 1
+fi
+
+# Give network stack 30 seconds to FULLY stabilize
+echo "Network up - waiting 30s for full stabilization..." >> $LOGFILE
+sleep 30
+
+# NOW start worker daemon (with retry logic built-in)
+echo "Starting worker daemon..." >> $LOGFILE
+nohup /data/data/com.termux/files/usr/bin/python -B worker-daemon.py >> $DAEMON_LOG 2>&1 &
+DAEMON_PID=$!
+sleep 2
+
+# Check if daemon started
+if pgrep -f "worker-daemon.py" > /dev/null; then
+    echo "✓ Worker daemon started (PID: $DAEMON_PID)" >> $LOGFILE
+else
+    echo "✗ Worker daemon failed to start - check $DAEMON_LOG" >> $LOGFILE
+fi
+
+# DISABLED (aio-01 unreachable): # Start registration script
+# DISABLED (aio-01 unreachable): echo "Starting registration script..." >> $LOGFILE
+# DISABLED (aio-01 unreachable): nohup ./worker-register.sh >> ~/worker-register.log 2>&1 &
+# DISABLED (aio-01 unreachable): REG_PID=$!
+# DISABLED (aio-01 unreachable): sleep 3
+# DISABLED (aio-01 unreachable): 
+# DISABLED (aio-01 unreachable): # Check if registration is running  
+# DISABLED (aio-01 unreachable): if pgrep -f "worker-register.sh" > /dev/null; then
+# DISABLED (aio-01 unreachable):     echo "✓ Registration script started (PID: $REG_PID)" >> $LOGFILE
+# DISABLED (aio-01 unreachable): else
+# DISABLED (aio-01 unreachable):     echo "⚠ Registration script may have completed" >> $LOGFILE
+# DISABLED (aio-01 unreachable): fi
+
+echo "=== Boot script completed: $(date) ===" >> $LOGFILE
+
+# BOOT-TIME CACHE CLEANUP (no-root subset)
+echo "Cleaning regenerable files..." >> $LOGFILE
+rm -rf /sdcard/.thumbnails/* 2>> $LOGFILE
+find /sdcard -name '*.tmp' -delete 2>> $LOGFILE
+apt-get clean 2>> $LOGFILE
+echo "✓ Boot cleanup done" >> $LOGFILE
