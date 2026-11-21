@@ -212,7 +212,7 @@ Total boot time: ~90 seconds from power-on to fully operational.
 - android-j7-01: ✅ Production ready (SSH + daemon auto-start working; wake lock fixed 2026-11-20)
 - android-j7-02: Pending setup
 
-**Storage (2026-11-20):** 423MB free → ~2.9GB free (96% → 73% used) via `fast_clean.sh`, uninstalling unused apps/games, and removing Termux's clang/LLVM toolchain (~670MB; reinstall with `pkg install clang` if pip source builds are needed).
+**Storage (2026-11-20):** 423MB free → 3.08GB free (96% → 70% used) via `fast_clean.sh`, uninstalling unused apps/games, removing Termux's clang/LLVM toolchain (~670MB; reinstall with `pkg install clang` if pip source builds are needed), and removing an unused Knox workspace user (`pm remove-user 10` — freed ~263MB storage and ~429MB RAM).
 
 **Shizuku:** Installed and working on android-j7-01 — see [SHIZUKU.md](SHIZUKU.md). Elevated commands (`pm trim-caches` etc.) can run from Termux via rish, no laptop required (except to restart the Shizuku server after a reboot).
 
